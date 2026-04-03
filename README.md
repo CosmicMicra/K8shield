@@ -1,6 +1,8 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.demolab.com?font=Space+Mono&size=32&pause=1000&color=4F8EF7&center=true&vCenter=true&width=600&lines=K8Shield+🛡;Kubernetes+Security+Monitoring;ML-Powered+Threat+Detection" alt="K8Shield"/>
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0d1f3c,4f8ef7&height=140&section=header&text=K8Shield%20🛡&fontSize=52&fontColor=ffffff&animation=fadeIn&fontAlignY=42&desc=Kubernetes%20Security%20Monitoring%20·%20ML-Powered%20Threat%20Detection&descAlignY=65&descColor=a0c4ff&descSize=16"/>
+</div>
 
 <br/>
 
