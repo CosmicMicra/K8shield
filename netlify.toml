@@ -1,0 +1,4 @@
+# Static site: no build step, publish the site/ folder as-is.
+[build]
+  publish = "site"
+  command = "echo 'Static site, no build step'"

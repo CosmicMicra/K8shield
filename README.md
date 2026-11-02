@@ -1,148 +1,87 @@
 <div align="center">
 
 <div align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0d1f3c,4f8ef7&height=140&section=header&text=K8Shield%20🛡&fontSize=52&fontColor=ffffff&animation=fadeIn&fontAlignY=42&desc=Kubernetes%20Security%20Monitoring%20·%20ML-Powered%20Threat%20Detection&descAlignY=65&descColor=a0c4ff&descSize=16"/>
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0d1f3c,4f8ef7&height=140&section=header&text=K8Shield%20🛡&fontSize=52&fontColor=ffffff&animation=fadeIn&fontAlignY=42&desc=Kubernetes%20Audit-Log%20Anomaly%20Detection%20·%20Isolation%20Forest%20%2B%20Elasticsearch&descAlignY=65&descColor=a0c4ff&descSize=16"/>
 </div>
 
 <br/>
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-k8shield.netlify.app-4f8ef7?style=for-the-badge&logo=netlify&logoColor=white)](https://k8shield.netlify.app/)
 [![Published](https://img.shields.io/badge/Published-IRJET%202024-bc8cff?style=for-the-badge&logo=google-scholar&logoColor=white)](https://www.irjet.net)
-[![Python](https://img.shields.io/badge/Python-3.10-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![AWS](https://img.shields.io/badge/AWS-SageMaker-ff9900?style=for-the-badge&logo=amazonaws&logoColor=white)](https://aws.amazon.com)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-Isolation%20Forest-f7931e?style=for-the-badge&logo=scikitlearn&logoColor=white)](https://scikit-learn.org)
 
 <br/>
 
-> **Real-time Kubernetes security monitoring with ML-based anomaly detection.**  
-> Detects unauthorized access, unusual pod activity, and privilege escalation — at a glance.
+> **Spot attacks in your Kubernetes audit logs.**
+> K8Shield learns what normal API activity looks like and flags privilege escalation, suspicious pod exec and secret-scraping bursts.
 
 </div>
 
 ---
 
-## 📸 Dashboard
-
-![K8Shield Dashboard](./dashboard.png)
-
-*Live cluster status · ML anomaly alerts with scores · CIS compliance · Historical analysis*
-
----
-
 ## 🎯 What it does
 
-K8Shield watches your Kubernetes cluster and uses machine learning to catch threats that rule-based systems miss. It collects audit logs via Fluentd, runs them through Isolation Forest and K-Means models trained on AWS SageMaker, and surfaces everything on a live dashboard.
+K8Shield reads Kubernetes API-server audit logs and summarises behaviour per user and source IP every 5 minutes: request volume, verb mix, RBAC changes, namespaces touched, client rarity, 401/403 rate, exec and secret access. An unsupervised **Isolation Forest** scores each window, and flagged windows are sent to **Elasticsearch** with a severity.
 
 ```
-Kubernetes Cluster → Fluentd (audit logs) → Python processing → ML models → React dashboard
-                                                                      ↓
-                                                              AWS S3 (log storage)
+Audit logs ──▶ 5-min behaviour features ──▶ Isolation Forest ──▶ Elasticsearch + alerts
+                                                    │
+                                                    └──▶ Benchmark vs. static rules
 ```
-
----
-
-## ✨ Key Features
-
-| Feature | Details |
-|---|---|
-| 🔴 **Real-time monitoring** | Live CPU, memory, pod states, node status |
-| 🤖 **ML anomaly detection** | Isolation Forest + K-Means · **92% threat detection accuracy** |
-| 🚨 **Anomaly scoring** | Each alert has a confidence score (e.g. unusual pod activity: 89%) |
-| 📈 **Historical analysis** | Trend visualization of security incidents over time |
-| ✅ **CIS compliance** | Automated compliance checks — Passed / Warning / Failed breakdown |
-| ☁️ **Cloud-native** | Runs on AWS EC2 + K3s, logs stored in S3 |
-
----
-
-## 🛠 Tech Stack
-
-<p>
-  <img src="https://skillicons.dev/icons?i=python,react,aws,kubernetes,docker&perline=5"/>
-</p>
-
-| Layer | Technology |
-|---|---|
-| **Frontend** | React · Recharts |
-| **Backend** | Python |
-| **Log Collection** | Fluentd (Kubernetes audit logs) |
-| **ML Models** | Isolation Forest · K-Means |
-| **Training** | AWS SageMaker |
-| **Storage** | AWS S3 |
-| **Infra** | AWS EC2 · K3s |
-
----
 
 ## 📊 Results
 
-```
-Threat Detection Accuracy    ████████████████████░░  92%
-Anomaly Types Detected       Unusual pod activity · Privilege escalation · API access anomalies
-CIS Compliance (sample)      Passed: 37  ·  Warning: 8  ·  Failed: 4
-```
+Mean of 5 runs on a synthetic benchmark with injected attacks (30% of them deliberately stealthy):
 
----
+| Metric | Static rules | K8Shield |
+|---|---:|---:|
+| Precision | 0.43 | **0.78** |
+| Recall | **0.91** | 0.77 |
+| F1 | 0.59 | **0.77** |
+| False positive rate | 6.6% | **1.2%** |
+| ROC AUC | — | **0.99** |
 
-## 🏗 Architecture
+At equal recall, K8Shield raises **38.5% ± 25.2%** fewer false alarms than the rules. These numbers come from synthetic data, not a production cluster. The full breakdown, plots and caveats are in [`backend/README.md`](backend/README.md).
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                Kubernetes Cluster (K3s / EC2)           │
-│   [Pod] [Pod] [Pod]  ──→  Fluentd  ──→  Audit Logs     │
-└──────────────────────────────┬──────────────────────────┘
-                               ▼
-                    ┌──────────────────┐
-                    │   AWS S3 Storage  │
-                    └────────┬─────────┘
-                             ▼
-              ┌──────────────────────────┐
-              │  Python Processing Layer  │
-              │  · Log parsing           │
-              │  · Feature extraction    │
-              └──────────────┬───────────┘
-                             ▼
-              ┌──────────────────────────┐
-              │    AWS SageMaker (ML)    │
-              │  · Isolation Forest      │
-              │  · K-Means Clustering    │
-              └──────────────┬───────────┘
-                             ▼
-              ┌──────────────────────────┐
-              │     React Dashboard      │
-              │  · Live metrics          │
-              │  · Security alerts       │
-              │  · CIS compliance        │
-              └──────────────────────────┘
-```
+<p align="center">
+  <img src="backend/reports/roc_curve.png" width="820" alt="ROC curve: K8Shield vs static rules">
+</p>
 
----
-
-## 🚀 Getting Started
+## 🚀 Quick start
 
 ```bash
-# Clone the repo
-git clone https://github.com/CosmicMicra/K8shield.git
-cd K8shield
-
-# Install frontend dependencies
-npm install
-
-# Start the dashboard
-npm start
+git clone https://github.com/CosmicMicra/k8shield.git
+cd k8shield/backend
+pip install -r requirements.txt
+python main.py run
 ```
 
-> **Note:** The full backend (Python + AWS SageMaker pipeline) runs on AWS infrastructure. The frontend is live at [k8shield.netlify.app](https://k8shield.netlify.app/)
+This generates labelled audit logs, trains the model, evaluates it against the rule baseline, and writes metrics and plots to `backend/reports/`. It takes about 15 seconds.
+
+## 📁 Repository
+
+| Path | Contents |
+|---|---|
+| [`backend/`](backend/) | Python pipeline: log generator, feature extraction, model training, Elasticsearch ingestion, evaluation, tests |
+| [`site/`](site/) | The static project page served at [k8shield.netlify.app](https://k8shield.netlify.app/) |
+
+## 🛠 Tech stack
+
+Python · scikit-learn · pandas · NumPy · matplotlib · Elasticsearch
 
 ---
 
 ## 📄 Publication
 
-**K8Shield: Real-Time Kubernetes Security Monitoring using Machine Learning**  
+**K8Shield: Real-Time Kubernetes Security Monitoring using Machine Learning**
 *Soniya Phaltane (First Author) · IRJET Volume 11, Issue 9 · 2024*
 
----
+This repository is a rebuilt, reproducible implementation of the pipeline.
 
 ## 👩‍💻 Author
 
-**Soniya Phaltane** · [@CosmicMicra](https://github.com/CosmicMicra)  
+**Soniya Phaltane** · [@CosmicMicra](https://github.com/CosmicMicra)
 ML Engineer · AI Security · [soniyaphaltane-portfolio.netlify.app](https://soniyaphaltane-portfolio.netlify.app)
 
 ---
