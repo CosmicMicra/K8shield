@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>K8Shield: Kubernetes audit-log anomaly detection</title>
+<meta name="description" content="K8Shield flags privilege escalation, suspicious pod exec and secret-scraping bursts in Kubernetes audit logs using an Isolation Forest.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232a78d6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1f63b5}a:hover{color:#123f78}
+@media (max-width:600px){.hero{font-size:34px !important}}
+</style>
+</head>
+<body><div style="font-family: Inter, system-ui, sans-serif; color: #0e1116; background: #f5f6f8; min-height: 100vh">
+  <div style="max-width: 1040px; margin: 0 auto; padding: 0 24px; display: flex; flex-direction: column">
+
+    <header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 0">
+      <span style="display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px">
+        <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"></path><path d="m9 12 2 2 4-4"></path></svg>
+        K8Shield
+      </span>
+      <a href="https://github.com/CosmicMicra/k8shield" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; min-height: 44px; box-sizing: border-box; font-size: 14px; font-weight: 600; color: #0e1116; background: #ffffff; border: 1px solid #d5d9df; border-radius: 8px; text-decoration: none">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"></path><path d="m8 6-6 6 6 6"></path></svg>
+        View on GitHub
+      </a>
+    </header>
+
+    <section style="padding: 56px 0 40px; display: flex; flex-direction: column; gap: 18px; align-items: flex-start">
+      <h1 class="hero" style="margin: 0; font-size: 46px; line-height: 1.1; letter-spacing: -0.025em; max-width: 780px">Spot attacks in your Kubernetes audit logs</h1>
+      <p style="margin: 0; font-size: 18px; line-height: 1.55; color: #3d4450; max-width: 680px">K8Shield learns what normal API activity looks like and flags the outliers: privilege escalation, suspicious pod exec, and secret-scraping bursts. It uses an Isolation Forest and sends alerts to Elasticsearch.</p>
+    </section>
+
+    <section aria-label="Key results" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px">
+      <div style="background: #ffffff; border: 1px solid #e3e6ea; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 36px; font-weight: 700; letter-spacing: -0.02em">1.2%</span>
+        <span style="font-size: 14px; color: #3d4450">false positive rate, vs 6.6% for static rules</span>
+      </div>
+      <div style="background: #ffffff; border: 1px solid #e3e6ea; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 36px; font-weight: 700; letter-spacing: -0.02em">0.77</span>
+        <span style="font-size: 14px; color: #3d4450">F1 score, vs 0.59 for static rules</span>
+      </div>
+      <div style="background: #ffffff; border: 1px solid #e3e6ea; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 36px; font-weight: 700; letter-spacing: -0.02em">0.99</span>
+        <span style="font-size: 14px; color: #3d4450">ROC AUC</span>
+      </div>
+    </section>
+    <p style="margin: 10px 0 0; font-size: 13px; color: #5a6270">Mean of 5 runs on a synthetic benchmark with injected attacks.</p>
+
+    <section style="padding: 64px 0 0; display: flex; flex-direction: column; gap: 20px">
+      <h2 style="margin: 0; font-size: 26px; letter-spacing: -0.015em">How it works</h2>
+      <ol style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px">
+        <li style="display: flex; flex-direction: column; gap: 8px">
+          <span style="width: 32px; height: 32px; border-radius: 16px; background: #e6effb; color: #123f78; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center">1</span>
+          <span style="font-weight: 600; font-size: 16px">Read audit logs</span>
+          <span style="font-size: 14px; line-height: 1.5; color: #3d4450">Every API request the cluster records.</span>
+        </li>
+        <li style="display: flex; flex-direction: column; gap: 8px">
+          <span style="width: 32px; height: 32px; border-radius: 16px; background: #e6effb; color: #123f78; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center">2</span>
+          <span style="font-weight: 600; font-size: 16px">Summarise behaviour</span>
+          <span style="font-size: 14px; line-height: 1.5; color: #3d4450">Per user and IP, every 5 minutes: volume, errors, RBAC changes, exec, secrets.</span>
+        </li>
+        <li style="display: flex; flex-direction: column; gap: 8px">
+          <span style="width: 32px; height: 32px; border-radius: 16px; background: #e6effb; color: #123f78; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center">3</span>
+          <span style="font-weight: 600; font-size: 16px">Score outliers</span>
+          <span style="font-size: 14px; line-height: 1.5; color: #3d4450">An Isolation Forest learns normal traffic and scores anything unusual.</span>
+        </li>
+        <li style="display: flex; flex-direction: column; gap: 8px">
+          <span style="width: 32px; height: 32px; border-radius: 16px; background: #e6effb; color: #123f78; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center">4</span>
+          <span style="font-weight: 600; font-size: 16px">Alert</span>
+          <span style="font-size: 14px; line-height: 1.5; color: #3d4450">Flagged windows go to Elasticsearch with a severity.</span>
+        </li>
+      </ol>
+    </section>
+
+    <section style="padding: 64px 0 0; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px">
+        <h2 style="margin: 0; font-size: 26px; letter-spacing: -0.015em">Example alerts</h2>
+        <span style="font-size: 13px; color: #5a6270">Real output from the benchmark test set</span>
+      </div>
+      <div style="background: #ffffff; border: 1px solid #e3e6ea; border-radius: 12px; overflow: hidden">
+        
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 18px 22px; border-bottom: 1px solid #eef0f3">
+            <div style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+              <span style="font-weight: 600; font-size: 15px">Secret-scraping burst on kube-system</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #5a6270; overflow-wrap: anywhere">dmitri@k8shield.corp · 45.155.205.93</span>
+            </div>
+            <span style="flex: 1 1 220px; font-size: 13px; color: #3d4450">464 requests in 5 min, 91% denied, external IP</span>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 90px">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 500">0.756</span>
+              <span style="font-size: 12px; color: #5a6270">anomaly score</span>
+            </div>
+          </div>
+        
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 18px 22px; border-bottom: 1px solid #eef0f3">
+            <div style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+              <span style="font-weight: 600; font-size: 15px">Pod exec into production from unknown IP</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #5a6270; overflow-wrap: anywhere">system:serviceaccount:search:default · 103.75.190.231</span>
+            </div>
+            <span style="flex: 1 1 220px; font-size: 13px; color: #3d4450">67% of requests are exec, 67% denied</span>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 90px">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 500">0.734</span>
+              <span style="font-size: 12px; color: #5a6270">anomaly score</span>
+            </div>
+          </div>
+        
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 18px 22px; border-bottom: 1px solid #eef0f3">
+            <div style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+              <span style="font-weight: 600; font-size: 15px">Attempted cluster-admin binding</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #5a6270; overflow-wrap: anywhere">carol@k8shield.corp · 45.155.205.249</span>
+            </div>
+            <span style="flex: 1 1 220px; font-size: 13px; color: #3d4450">RBAC write, 67% denied, rare client</span>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 90px">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 500">0.717</span>
+              <span style="font-size: 12px; color: #5a6270">anomaly score</span>
+            </div>
+          </div>
+        
+      </div>
+    </section>
+
+    <footer style="padding: 56px 0 48px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 13px; color: #5a6270">
+      <span>K8Shield · Kubernetes anomaly detection</span>
+      <a href="https://github.com/CosmicMicra/k8shield">github.com/CosmicMicra/k8shield</a>
+    </footer>
+  </div>
+</div>
+</body>
+</html>
