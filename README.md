@@ -45,7 +45,8 @@ Mean of 5 runs on a synthetic benchmark with injected attacks (30% of them delib
 At equal recall, K8Shield raises **38.5% ± 25.2%** fewer false alarms than the rules. These numbers come from synthetic data, not a production cluster. The full breakdown, plots and caveats are in [`backend/README.md`](backend/README.md).
 
 <p align="center">
-  <img src="backend/reports/roc_curve.png" width="820" alt="ROC curve: K8Shield vs static rules">
+  <img src="backend/reports/roc_curve.png" width="820" alt="ROC curve: K8Shield vs static rules"><br>
+  <img src="backend/reports/confusion_matrices.png" width="820" alt="Confusion matrices: K8Shield vs static rules">
 </p>
 
 ## 🚀 Quick start
