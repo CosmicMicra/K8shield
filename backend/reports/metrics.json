@@ -1,0 +1,57 @@
+{
+  "iforest": {
+    "precision": 0.8154362416107382,
+    "recall": 0.7763578274760383,
+    "f1": 0.7954173486088381,
+    "fpr": 0.010393046107331822,
+    "accuracy": 0.9776984834968778,
+    "tp": 243,
+    "fp": 55,
+    "tn": 5237,
+    "fn": 70
+  },
+  "rules": {
+    "precision": 0.45799011532125206,
+    "recall": 0.8881789137380192,
+    "f1": 0.6043478260869565,
+    "fpr": 0.062169312169312166,
+    "accuracy": 0.9350579839429081,
+    "tp": 278,
+    "fp": 329,
+    "tn": 4963,
+    "fn": 35
+  },
+  "iforest_auc": 0.9922910946416195,
+  "rules_auc": 0.9308586231794811,
+  "fpr_reduction": 0.8328267477203648,
+  "matched_recall": {
+    "target_recall": 0.8881789137380192,
+    "iforest_fpr": 0.02286470143613001,
+    "iforest_score_threshold": 0.5531598031587253,
+    "rules_fpr": 0.062169312169312166,
+    "fpr_reduction": 0.6322188449848024
+  },
+  "per_type_recall": {
+    "exec_anomaly": {
+      "n": 86,
+      "iforest_recall": 0.6627906976744186,
+      "rules_recall": 1.0
+    },
+    "rbac_escalation": {
+      "n": 112,
+      "iforest_recall": 0.9017857142857143,
+      "rules_recall": 1.0
+    },
+    "secret_burst": {
+      "n": 115,
+      "iforest_recall": 0.7391304347826086,
+      "rules_recall": 0.6956521739130435
+    }
+  },
+  "n_windows": 5605,
+  "anomaly_rate": 0.05584299732381802,
+  "artifacts": {
+    "confusion_matrices": "reports/confusion_matrices.png",
+    "roc_curve": "reports/roc_curve.png"
+  }
+}
